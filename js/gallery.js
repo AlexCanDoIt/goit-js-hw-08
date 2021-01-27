@@ -8,7 +8,7 @@ const refs = {
   lightboxOverlay: document.querySelector('.js-lightbox__overlay'),
 };
 
-refs.gallery.append(...createGallery(images));
+createGallery(refs.gallery, images);
 
 refs.gallery.addEventListener('click', onImageClick);
 refs.closeLightboxBtn.addEventListener('click', closeLightbox);
@@ -19,12 +19,8 @@ document.addEventListener('keydown', event => {
 
 document.addEventListener('keydown', event => {
   if (!refs.lightbox.classList.contains('is-open')) return;
-
-  const currentImageRef = refs.lightboxImage;
-  const numberOfImages = Number(refs.gallery.dataset.lastCollectionIndex);
-
-  if (event.code === 'ArrowLeft') getPreviousImage(currentImageRef);
-  if (event.code === 'ArrowRight') getNextImage(currentImageRef, numberOfImages);
+  if (event.code === 'ArrowLeft') toggleLightboxImage('preview index');
+  if (event.code === 'ArrowRight') toggleLightboxImage('next index');
 });
 
 function createGalleryImage({ preview, original, description }, index) {
@@ -48,34 +44,31 @@ function createGalleryImage({ preview, original, description }, index) {
   return itemRef;
 };
 
-function createGallery(images) {
-  refs.gallery.setAttribute('data-last-collection-index', images.length - 1);
-
-  return images.map((image, index) => createGalleryImage(image, index));
+function createGallery(gallery, images) {
+  const imagesRefs = images.map((image, index) => createGalleryImage(image, index));
+  gallery.append(...imagesRefs);
+  gallery.setAttribute('data-last-collection-index', images.length - 1);
 };
 
 function onImageClick(event) {
   event.preventDefault();
-
   if (event.target.nodeName !== 'IMG') return;
 
-  const imageRef = event.target;
-  const lightboxImageURL = imageRef.dataset.source;
-  const lightboxImageAlt = imageRef.alt;
-  const indexOfImage = imageRef.dataset.index;
+  const imageIndex = event.target.dataset.index;
 
   openLightbox();
-  setLightboxImage(lightboxImageURL, lightboxImageAlt, indexOfImage);
-};
-
-function setLightboxImage(url, alt, index) {
-  refs.lightboxImage.src = url;
-  refs.lightboxImage.alt = alt;
-  refs.lightboxImage.setAttribute('data-index', index);
+  setLightboxImage(imageIndex);
 };
 
 function openLightbox() {
   refs.lightbox.classList.add('is-open');
+};
+
+function setLightboxImage(imageIndex) {
+  const imageRef = refs.gallery.querySelector(`img[data-index="${imageIndex}"]`);
+  refs.lightboxImage.src = imageRef.dataset.source;
+  refs.lightboxImage.alt = imageRef.alt;
+  refs.lightboxImage.setAttribute('data-index', imageIndex);
 };
 
 function closeLightbox() {
@@ -83,24 +76,20 @@ function closeLightbox() {
   refs.lightboxImage.src = '';
 };
 
-function getPreviousImage(currentImage) {
-  if (currentImage.dataset.index <= 0) return;
+function toggleLightboxImage(indexAction) {
+  const lastCollectionIndex = Number(refs.gallery.dataset.lastCollectionIndex);
+  const currentImageIndex = Number(refs.lightboxImage.dataset.index);
+  let index;
   
-  const index = Number(currentImage.dataset.index) - 1;
-  const imageRef = refs.gallery.querySelector(`img[data-index="${index}"]`);
-  const lightboxImageURL = imageRef.dataset.source;
-  const lightboxImageAlt = imageRef.alt;
+  if (indexAction === 'preview index') {
+    if (currentImageIndex <= 0) return;
+    index = currentImageIndex - 1;
+  }
 
-  setLightboxImage(lightboxImageURL, lightboxImageAlt, index);
-};
+  else if (indexAction === 'next index') {
+    if (currentImageIndex >= lastCollectionIndex) return;
+    index = currentImageIndex + 1;
+  };
 
-function getNextImage(currentImage, numberOfImages) {
-  if (currentImage.dataset.index >= numberOfImages) return;
-
-  const index = Number(currentImage.dataset.index) + 1;
-  const imageRef = refs.gallery.querySelector(`img[data-index="${index}"]`);
-  const lightboxImageURL = imageRef.dataset.source;
-  const lightboxImageAlt = imageRef.alt;
-
-  setLightboxImage(lightboxImageURL, lightboxImageAlt, index);
+  setLightboxImage(index);
 };
