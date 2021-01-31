@@ -16,12 +16,7 @@ refs.lightboxOverlay.addEventListener('click', closeLightbox);
 document.addEventListener('keydown', event => {
   if (event.code === 'Escape') closeLightbox();
 });
-
-document.addEventListener('keydown', event => {
-  if (!refs.lightbox.classList.contains('is-open')) return;
-  if (event.code === 'ArrowLeft') toggleLightboxImage('preview index');
-  if (event.code === 'ArrowRight') toggleLightboxImage('next index');
-});
+document.addEventListener('keydown', event => pressArrowKey(event));
 
 function createGalleryImage({ preview, original, description }, index) {
   const itemRef = document.createElement('li');
@@ -54,10 +49,18 @@ function onImageClick(event) {
   event.preventDefault();
   if (event.target.nodeName !== 'IMG') return;
 
+  console.dir(event.target);
+  
   const imageIndex = event.target.dataset.index;
 
   openLightbox();
   setLightboxImage(imageIndex);
+};
+
+function pressArrowKey(event) {
+  if (!refs.lightbox.classList.contains('is-open')) return;
+  if (event.code === 'ArrowLeft') toggleLightboxImage('preview index');
+  if (event.code === 'ArrowRight') toggleLightboxImage('next index');
 };
 
 function openLightbox() {
